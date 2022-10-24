@@ -62,18 +62,20 @@ def discoveryCertified():
 
 
 # Date Expirate
-def expirationCertified(dbserial):
+def expirationCertified(dbhash, dbserial=None):
     lista = discoveryCertified()
     d1_json = json.loads(lista)
     for i in d1_json['data']:
-        if dbserial == i['{#DBSERIAL}']:
-            expiration = i['{#DBEXPDATE}']
-            return expiration
+        if dbhash == i['{#HASH}'] and (not dbserial or (dbserial and dbserial == i['{#DBSERIAL}'])):
+            return i['{#DBEXPDATE}']
 
 
 # Script execution with arguments
 if arguments == 'discoveryCertified':
-    print(discoveryCertificate())
+    print(discoveryCertified())
 elif arguments == 'expirationCertified':
     cert_serial = sys.argv[5]
-    print(expirationCertified(cert_serial))
+    if 7 == len(sys.argv):
+        print(expirationCertified(cert_serial, sys.argv[6]))
+    else:
+        print(expirationCertified(cert_serial))

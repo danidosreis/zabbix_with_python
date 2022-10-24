@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>5.0</version>
+    <date>2022-08-30T18:32:39Z</date>
+    <groups>
+        <group>
+            <name>PaloAlto</name>
+        </group>
+        <group>
+            <name>Templates</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <template>Template Palo Alto Extra</template>
+            <name>Template Palo Alto Extra</name>
+            <groups>
+                <group>
+                    <name>PaloAlto</name>
+                </group>
+                <group>
+                    <name>Templates</name>
+                </group>
+            </groups>
+            <applications>
+                <application>
+                    <name>Certificate</name>
+                </application>
+                <application>
+                    <name>License</name>
+                </application>
+                <application>
+                    <name>VPN</name>
+                </application>
+            </applications>
+            <discovery_rules>
+                <discovery_rule>
+                    <name>paloalto.certs</name>
+                    <type>EXTERNAL</type>
+                    <key>paloalto-certified.check[{HOST.CONN},443,{$PALOALTO_API_TOKEN},discoveryCertified]</key>
+                    <delay>1h</delay>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>{#DBNAME}</name>
+                            <type>EXTERNAL</type>
+                            <key>paloalto-certified.check[{HOST.CONN},443,{$PALOALTO_API_TOKEN},expirationCertified,{#HASH}]</key>
+                            <delay>1h</delay>
+                            <units>unixtime</units>
+                            <applications>
+                                <application>
+                                    <name>Certificate</name>
+                                </application>
+                            </applications>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{last()}&lt;=3600</expression>
+                                    <name>{#DBNAME} expired</name>
+                                    <priority>DISASTER</priority>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <expression>{last()}&lt;=604800</expression>
+                                    <name>{#DBNAME} expires in less than 7 days</name>
+                                    <priority>HIGH</priority>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>{#DBNAME} expired</name>
+                                            <expression>{Template Palo Alto Extra:paloalto-certified.check[{HOST.CONN},443,{$PALOALTO_API_TOKEN},expirationCertified,{#HASH}].last()}&lt;=3600</expression>
+                                        </dependency>
+                                    </dependencies>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <expression>{last()}&lt;=3888000</expression>
+                                    <name>{#DBNAME} expires in less than 45 days</name>
+                                    <priority>AVERAGE</priority>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>{#DBNAME} expires in less than 7 days</name>
+                                            <expression>{Template Palo Alto Extra:paloalto-certified.check[{HOST.CONN},443,{$PALOALTO_API_TOKEN},expirationCertified,{#HASH}].last()}&lt;=604800</expression>
+                                        </dependency>
+                                    </dependencies>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <expression>{last()}&lt;=7776000</expression>
+                                    <name>{#DBNAME} expires in less than 90 days</name>
+                                    <priority>WARNING</priority>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>{#DBNAME} expires in less than 45 days</name>
+                                            <expression>{Template Palo Alto Extra:paloalto-certified.check[{HOST.CONN},443,{$PALOALTO_API_TOKEN},expirationCertified,{#HASH}].last()}&lt;=3888000</expression>
+                                        </dependency>
+                                    </dependencies>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                    </item_prototypes>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.data</params>
+                        </step>
+                    </preprocessing>
+                </discovery_rule>
+                <discovery_rule>
+                    <name>paloalto.ipsec</name>
+                    <type>EXTERNAL</type>
+                    <key>paloalto-ipsec.check[{HOST.CONN},443,{$PALOALTO_API_TOKEN},discovery_vpn]</key>
+                    <delay>5m</delay>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>{#NAME}</name>
+                            <type>EXTERNAL</type>
+                            <key>paloalto-ipsec.check[{HOST.CONN},443,{$PALOALTO_API_TOKEN},status_vpn,{#NAME}]</key>
+                            <delay>5m</delay>
+                            <trends>0</trends>
+                            <value_type>CHAR</value_type>
+                            <applications>
+                                <application>
+                                    <name>VPN</name>
+                                </application>
+                            </applications>
+                            <valuemap>
+                                <name>PaloAlto VPN Status</name>
+                            </valuemap>
+                        </item_prototype>
+                    </item_prototypes>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.data</params>
+                        </step>
+                    </preprocessing>
+                </discovery_rule>
+                <discovery_rule>
+                    <name>paloalto.licenses</name>
+                    <type>EXTERNAL</type>
+                    <key>paloalto-license.check[{HOST.CONN},443,{$PALOALTO_API_TOKEN},discoveryLicensesOperations]</key>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>{#NAME} ({#SERIAL})</name>
+                            <type>EXTERNAL</type>
+                            <key>paloalto-license.check[{HOST.CONN},443,{$PALOALTO_API_TOKEN},expirationLicensesOperations,{#NAME}]</key>
+                            <delay>1h</delay>
+                            <units>unixtime</units>
+                            <applications>
+                                <application>
+                                    <name>License</name>
+                                </application>
+                            </applications>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{last(#1)}&lt;=3600</expression>
+                                    <name>{#NAME} expired</name>
+                                    <priority>DISASTER</priority>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <expression>{last(#1)}&lt;=604800</expression>
+                                    <name>{#NAME} expires in 7 days</name>
+                                    <priority>HIGH</priority>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>{#NAME} expired</name>
+                                            <expression>{Template Palo Alto Extra:paloalto-license.check[{HOST.CONN},443,{$PALOALTO_API_TOKEN},expirationLicensesOperations,{#NAME}].last(#1)}&lt;=3600</expression>
+                                        </dependency>
+                                    </dependencies>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <expression>{last(#1)}&lt;=3888000</expression>
+                                    <name>{#NAME} expires in 45 days</name>
+                                    <priority>AVERAGE</priority>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>{#NAME} expires in 7 days</name>
+                                            <expression>{Template Palo Alto Extra:paloalto-license.check[{HOST.CONN},443,{$PALOALTO_API_TOKEN},expirationLicensesOperations,{#NAME}].last(#1)}&lt;=604800</expression>
+                                        </dependency>
+                                    </dependencies>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <expression>{last(#1)}&lt;=7776000</expression>
+                                    <name>{#NAME} expires in 90 days</name>
+                                    <priority>WARNING</priority>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>{#NAME} expires in 45 days</name>
+                                            <expression>{Template Palo Alto Extra:paloalto-license.check[{HOST.CONN},443,{$PALOALTO_API_TOKEN},expirationLicensesOperations,{#NAME}].last(#1)}&lt;=3888000</expression>
+                                        </dependency>
+                                    </dependencies>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                    </item_prototypes>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.data</params>
+                        </step>
+                    </preprocessing>
+                </discovery_rule>
+                <discovery_rule>
+                    <name>paloalto.support</name>
+                    <type>EXTERNAL</type>
+                    <key>paloalto-license.check[{HOST.CONN},443,{$PALOALTO_API_TOKEN},discoveryLicenseSupport]</key>
+                    <delay>1h</delay>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>{#NAME} ({#SUPPORTLEVEL})</name>
+                            <type>EXTERNAL</type>
+                            <key>paloalto-license.check[{HOST.CONN},443,{$PALOALTO_API_TOKEN},expirationLicenseSupport,{#NAME}]</key>
+                            <units>unixtime</units>
+                            <applications>
+                                <application>
+                                    <name>License</name>
+                                </application>
+                            </applications>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{last(#1)}&lt;=3600</expression>
+                                    <name>{#NAME} expired</name>
+                                    <priority>DISASTER</priority>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <expression>{last(#1)}&lt;=604800</expression>
+                                    <name>{#NAME} expires in 7 days</name>
+                                    <priority>HIGH</priority>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>{#NAME} expired</name>
+                                            <expression>{Template Palo Alto Extra:paloalto-license.check[{HOST.CONN},443,{$PALOALTO_API_TOKEN},expirationLicenseSupport,{#NAME}].last(#1)}&lt;=3600</expression>
+                                        </dependency>
+                                    </dependencies>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <expression>{last(#1)}&lt;=3888000</expression>
+                                    <name>{#NAME} expires in 45 days</name>
+                                    <priority>AVERAGE</priority>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>{#NAME} expires in 7 days</name>
+                                            <expression>{Template Palo Alto Extra:paloalto-license.check[{HOST.CONN},443,{$PALOALTO_API_TOKEN},expirationLicenseSupport,{#NAME}].last(#1)}&lt;=604800</expression>
+                                        </dependency>
+                                    </dependencies>
+                                </trigger_prototype>
+                                <trigger_prototype>
+                                    <expression>{last(#1)}&lt;=7776000</expression>
+                                    <name>{#NAME} expires in 90 days</name>
+                                    <priority>WARNING</priority>
+                                    <dependencies>
+                                        <dependency>
+                                            <name>{#NAME} expires in 45 days</name>
+                                            <expression>{Template Palo Alto Extra:paloalto-license.check[{HOST.CONN},443,{$PALOALTO_API_TOKEN},expirationLicenseSupport,{#NAME}].last(#1)}&lt;=3888000</expression>
+                                        </dependency>
+                                    </dependencies>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                    </item_prototypes>
+                    <preprocessing>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.data</params>
+                        </step>
+                    </preprocessing>
+                </discovery_rule>
+            </discovery_rules>
+            <macros>
+                <macro>
+                    <macro>{$PALOALTO_API_TOKEN}</macro>
+                    <description>Token for the PA APi</description>
+                </macro>
+            </macros>
+        </template>
+    </templates>
+    <value_maps>
+        <value_map>
+            <name>PaloAlto VPN Status</name>
+            <mappings>
+                <mapping>
+                    <value>0</value>
+                    <newvalue>Inactive</newvalue>
+                </mapping>
+                <mapping>
+                    <value>1</value>
+                    <newvalue>Active</newvalue>
+                </mapping>
+                <mapping>
+                    <value>2</value>
+                    <newvalue>Initializing</newvalue>
+                </mapping>
+            </mappings>
+        </value_map>
+    </value_maps>
+</zabbix_export>

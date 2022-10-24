@@ -22,8 +22,8 @@ port = sys.argv[2]
 
 # URL
 key = sys.argv[3]
-api_vpn = '&cmd=%3Cshow%3E%3Cvpn%3E%3Cflow%3E%3C%2Fflow%3E%3C%2Fvpn%3E%3C%2Fshow%3E'
-url = f'https://{ip_pa}:{port}/api/?type=op&cmd=show&key={key}{api_vpn}'
+api = '&cmd=%3Cshow%3E%3Cvpn%3E%3Cflow%3E%3C%2Fflow%3E%3C%2Fvpn%3E%3C%2Fshow%3E'
+url = 'https://{}:{}/api/?type=op&cmd=show&key={}{}'.format(ip_pa, port, key, api)
 
 # Telnet 443
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
